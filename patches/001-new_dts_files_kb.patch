@@ -1,0 +1,1156 @@
+diff --git a/arch/arm/boot/dts/nxp/imx/Makefile b/arch/arm/boot/dts/nxp/imx/Makefile
+index 12e091dc4c4c..54063c36ed80 100644
+--- a/arch/arm/boot/dts/nxp/imx/Makefile
++++ b/arch/arm/boot/dts/nxp/imx/Makefile
+@@ -90,6 +90,7 @@ dtb-$(CONFIG_SOC_IMX6Q) += \
+ 	imx6dl-hummingboard2.dtb \
+ 	imx6dl-hummingboard2-emmc-som-v15.dtb \
+ 	imx6dl-hummingboard2-som-v15.dtb \
++	imx6dl-kb-nextgen.dtb \
+ 	imx6dl-icore.dtb \
+ 	imx6dl-icore-mipi.dtb \
+ 	imx6dl-icore-rqs.dtb \
+diff --git a/arch/arm/boot/dts/nxp/imx/imx6dl-kb-nextgen.dts b/arch/arm/boot/dts/nxp/imx/imx6dl-kb-nextgen.dts
+new file mode 100644
+index 000000000000..6855159de80b
+--- /dev/null
++++ b/arch/arm/boot/dts/nxp/imx/imx6dl-kb-nextgen.dts
+@@ -0,0 +1,48 @@
++// SPDX-License-Identifier: GPL-2.0
++//
++// Copyright (C) 2013 Freescale Semiconductor, Inc.
++
++/dts-v1/;
++
++#include "imx6dl.dtsi"
++#include "imx6qdl-nextgen.dtsi"
++
++/ {
++	model = "Freescale i.MX6 DualLite KBs platform Board";
++	compatible = "fsl,imx6dl-sabresd", "fsl,imx6dl";
++};
++
++#if 0
++&ipu1_csi1_from_ipu1_csi1_mux {
++       clock-lanes = <0>;
++       data-lanes = <1 2>;
++};
++#endif
++
++&ldb {
++	lvds-channel@0 {
++		crtc = "ipu1-di0";
++		status = "disabled";
++	};
++
++	lvds-channel@1 {
++		crtc = "ipu1-di1";
++		status = "okay";
++	};
++};
++
++&mxcfb1 {
++	status = "okay";
++};
++
++&mxcfb2 {
++	status = "okay";
++};
++
++&pxp {
++	status = "okay";
++};
++
++&backlight_lvds1 {
++	status = "okay";
++};
+diff --git a/arch/arm/boot/dts/nxp/imx/imx6qdl-nextgen.dtsi b/arch/arm/boot/dts/nxp/imx/imx6qdl-nextgen.dtsi
+new file mode 100644
+index 000000000000..487a5f4d0e7e
+--- /dev/null
++++ b/arch/arm/boot/dts/nxp/imx/imx6qdl-nextgen.dtsi
+@@ -0,0 +1,1084 @@
++// SPDX-License-Identifier: GPL-2.0+
++//
++// Copyright 2012 Freescale Semiconductor, Inc.
++// Copyright 2011 Linaro Ltd.
++
++#include <dt-bindings/clock/imx6qdl-clock.h>
++#include <dt-bindings/gpio/gpio.h>
++#include <dt-bindings/input/input.h>
++
++/ {
++	aliases {
++		mxcfb0 = &mxcfb1;
++		mxcfb1 = &mxcfb2;
++		mxcfb2 = &mxcfb3;
++		mxcfb3 = &mxcfb4;
++	};
++
++	chosen {
++		stdout-path = &uart2;
++	};
++
++	memory: memory@10000000 {
++		device_type = "memory";
++		reg = <0x10000000 0x40000000>;
++	};
++
++	reg_3p3v: regulator-3p3v {
++		compatible = "regulator-fixed";
++		regulator-name = "3P3V";
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++		regulator-always-on;
++		gpio = <&gpio6 11 1>;	
++		pinctrl-names = "default";
++		pinctrl-0 = <&pinctrl_lvds>;
++	};
++
++	reg_usb_otg_vbus: regulator-usb-otg-vbus {
++		compatible = "regulator-fixed";
++		regulator-name = "usb_otg_vbus";
++		regulator-min-microvolt = <5000000>;
++		regulator-max-microvolt = <5000000>;
++		gpio = <&gpio3 22 GPIO_ACTIVE_HIGH>;
++		enable-active-high;
++		vin-supply = <&swbst_reg>;
++	};
++
++	reg_usbh1_vbus: regulator@1 {
++		compatible = "regulator-fixed";
++		regulator-name = "usbh1_vbus";
++		regulator-min-microvolt = <5000000>;
++		regulator-max-microvolt = <5000000>;
++		gpio = <&gpio3 31 0>;	
++		pinctrl-names = "default";
++		pinctrl-0 = <&pinctrl_usbh1_vbus>;
++		enable-active-high;
++	};
++
++	mmc_reg: regulator@4 {
++		compatible = "regulator-fixed";
++		regulator-name = "mmc_reg";
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++		regulator-boot-on;
++		regulator-always-on;
++	};
++
++	// power is supplied by VGEN4
++	wlan_en_reg: fixedregulator@5 {
++		compatible = "regulator-fixed";
++		regulator-name = "wlan-en-regulator";
++		regulator-min-microvolt = <1800000>;
++		regulator-max-microvolt = <1800000>;
++		gpio = <&gpio2 7 1>; /* WL_EN (F23)*/
++		startup-delay-us = <70000>;
++		enable-active-low;
++		//regulator-always-on;
++	};
++
++	wlbt_en_reg: fixedregulator@6 {
++		compatible = "regulator-fixed";
++		regulator-name = "wlbt-en-regulator";
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++		gpio = <&gpio2 04 1>; /* WL_EN (A19), uart4 buffer enable*/
++		startup-delay-us = <70000>;
++		enable-active-high;
++		//regulator-always-on;
++	};
++
++	reg_audio: regulator-audio {
++		compatible = "regulator-fixed";
++		regulator-name = "wm8962-supply";
++		gpio = <&gpio4 10 GPIO_ACTIVE_HIGH>;
++		enable-active-high;
++	};
++
++    	reg_hdmi: regulator-hdmi {
++		compatible = "regulator-fixed";
++		regulator-name = "hdmi-5v-supply";
++		regulator-min-microvolt = <5000000>;
++		regulator-max-microvolt = <5000000>;
++		enable-active-high;
++		hdmi-5v-supply = <&swbst_reg>;
++	};
++	
++    	debug-leds {
++		pinctrl-names = "default";
++        	pinctrl-0 = <&debug_leds>;
++		compatible = "gpio-leds";
++		/* debug led1*/
++		debug_led1@1 {
++			label = "debug_led1";
++			gpios = <&gpio6 15 GPIO_ACTIVE_HIGH>;
++			linux,default-trigger = "heartbeat";
++			default-state = "on";
++		};
++		/* debug led2*/
++		debug_led1@2 {
++			label = "debug_led2";
++			gpios = <&gpio6 16 GPIO_ACTIVE_HIGH>;
++			linux,default-trigger = "heartbeat";
++			default-state = "on";
++		};
++	};
++	
++	sound {
++                compatible = "fsl,imx-audio-sgtl5000";
++                model = "sgtl5000-fsl-audio";
++                ssi-controller = <&ssi1>;
++                audio-codec = <&codec>;
++
++                audio-routing =
++                        "Headphone Jack", "HP_OUT",
++                        "Ext Spk", "LINE_OUT";
++                mux-int-port = <1>;
++                mux-ext-port = <5>;
++        };
++	
++#if 0
++	sound-hdmi {
++		compatible = "fsl,imx6qdl-audio-hdmi";
++		model = "imx-audio-hdmi";
++		hdmi-controller = <&hdmi_audio>;
++	};
++#endif
++	mxcfb1: fb@0 {
++		compatible = "fsl,mxc_sdc_fb";
++		disp_dev = "ldb";
++		interface_pix_fmt = "RGB24";
++		default_bpp = <32>;
++		int_clk = <0>;
++		late_init = <0>;
++		status = "disable";
++	};
++
++	mxcfb2: fb@1 {
++		compatible = "fsl,mxc_sdc_fb";
++		disp_dev = "hdmi";
++		interface_pix_fmt = "RGB24";
++		mode_str ="1920x1080M@60";
++		default_bpp = <24>;
++		int_clk = <0>;
++		late_init = <0>;
++		status = "disabled";
++	};
++	
++	mxcfb3: fb@2 {
++		compatible = "fsl,mxc_sdc_fb";
++		disp_dev = "lcd";
++		interface_pix_fmt = "RGB565";
++		mode_str ="CLAA-WVGA";
++		default_bpp = <16>;
++		int_clk = <0>;
++		late_init = <0>;
++		status = "disabled";
++	};
++
++	mxcfb4: fb@3 {
++		compatible = "fsl,mxc_sdc_fb";
++		disp_dev = "ldb";
++		interface_pix_fmt = "RGB666";
++		default_bpp = <16>;
++		int_clk = <0>;
++		late_init = <0>;
++		status = "disabled";
++	};
++	
++	v4l2_cap_0 {
++		compatible = "fsl,imx6q-v4l2-capture";
++		ipu_id = <0>;
++		csi_id = <0>;
++		mclk_source = <0>;
++		status = "disabled";
++	};
++
++	v4l2_cap_1 {
++		compatible = "fsl,imx6q-v4l2-capture";
++		ipu_id = <0>;
++		csi_id = <1>;
++		mclk_source = <0>;
++		status = "disabled";
++	};
++
++	v4l2_out {
++		compatible = "fsl,mxc_v4l2_output";
++		status = "okay";
++	};
++
++	btwilink {
++		compatible = "btwilink";
++	    	status = "okay";
++	};
++	
++	kim {
++		compatible = "kim";
++		nshutdown_gpio = <20>; /* GPIO1_IO20, WILINK_BT_EN */
++		dev_name = "/dev/ttymxc3";
++		flow_cntrl = <1>;
++		baud_rate = <230400>;
++	    	status = "okay";
++	};
++
++	audioclk: ext13Mz {
++                compatible = "pwm-clock";
++                #clock-cells = <0>;
++                clock-frequency = <13200000>;
++                clock-output-names = "audio_pwm1";
++                pwms = <&pwm1 0 75 1>; /* 1 / 75 ns = 13.2 MHz */
++                status = "okay";
++        };
++
++	backlight_lvds1: backlight-lvds1 {
++		compatible = "pwm-backlight";
++		pwms = <&pwm3 0 5000000 1>;
++		brightness-levels = <0 4 8 16 32 64 128 255>;
++		default-brightness-level = <5>;
++		power-supply = <&reg_3p3v>;
++		status = "disabled";
++	};
++
++	backlight_lvds2: backlight-lvds2 {
++		compatible = "pwm-backlight";
++		pwms = <&pwm4 0 5000000 1>;
++		brightness-levels = <0 4 8 16 32 64 128 255>;
++		default-brightness-level = <5>;
++		power-supply = <&reg_3p3v>;
++		status = "disabled";
++	};
++};
++
++&audmux {
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_audmux>;
++	status = "okay";
++};
++
++&clks {
++	assigned-clocks = <&clks IMX6QDL_CLK_LDB_DI0_SEL>,
++			  <&clks IMX6QDL_CLK_LDB_DI1_SEL>;
++	assigned-clock-parents = <&clks IMX6QDL_CLK_PLL2_PFD0_352M>,
++				 <&clks IMX6QDL_CLK_PLL2_PFD0_352M>;
++};
++
++&dcic1 {
++	dcic_id = <0>;
++	dcic_mux = "dcic-hdmi";
++	status = "disabled";
++};
++
++&dcic2 {
++	dcic_id = <1>;
++	dcic_mux = "dcic-lvds1";
++	status = "disabled";
++};
++
++&ecspi1 {
++	cs-gpios = <&gpio4 9 GPIO_ACTIVE_LOW>;
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_ecspi1 &pinctrl_ecspi1_cs>;
++	status = "okay";
++
++	flash: flash@0 {
++		#address-cells = <1>;
++		#size-cells = <1>;
++		compatible = "st,m25p32", "jedec,spi-nor";
++		spi-max-frequency = <20000000>;
++		reg = <0>;
++		pinctrl-names ="default";
++		pinctrl-0 = <&pinctrl_norhold>;
++	};
++};
++
++&ecspi4 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_ecspi4 &pinctrl_ecspi4_cs>;
++	fsl,spi-num-chipselects = <1>;
++	cs-gpios = <&gpio3 20 0>;
++	status = "okay";
++};
++
++&fec {
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_enet>;
++	phy-mode = "rgmii-id";
++	phy-handle = <&phy>;
++	fsl,magic-packet;
++	status = "okay";
++
++	mdio {
++		#address-cells = <1>;
++		#size-cells = <0>;
++
++		phy: ethernet-phy@1 {
++			reg = <1>;
++			qca,clk-out-frequency = <125000000>;
++			reset-gpios = <&gpio1 25 GPIO_ACTIVE_LOW>;
++			reset-assert-us = <10000>;
++		};
++	};
++};
++
++&gpc {
++	fsl,ldo-bypass = <1>;
++};
++
++&hdmi_audio {
++	status = "disabled";
++};
++
++&hdmi_cec {
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_hdmi_cec>;
++	status = "disabled";
++};
++
++&hdmi_core {
++	ipu_id = <0>;
++	disp_id = <0>;
++	status = "disabled";
++};
++
++&hdmi_video {
++	fsl,phy_reg_vlev = <0x294>;
++	fsl,phy_reg_cksymtx = <0x800d>;
++	HDMI-supply = <&reg_hdmi>;
++	status = "disabled";
++};
++
++&i2c1 {
++	clock-frequency = <100000>;
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_i2c1>;
++	status = "okay";
++	
++	/* mmpf0100 */
++	pmic: pfuze100@8 {
++		compatible = "fsl,pfuze100";
++		reg = <0x08>;
++		
++		regulators {
++			/* VDD_CORE, 1.375 */
++			sw1a_reg: sw1a {
++				regulator-min-microvolt = <1375000>;
++				regulator-max-microvolt = <1375000>;				
++				regulator-boot-on;
++				regulator-always-on;
++				regulator-ramp-delay = <6250>;
++			};
++			
++			// sw1b, not sure it is used, schematic has posible error
++			
++			/* VDD_SOC, 1.375 */
++			sw1c_reg: sw1c {
++				regulator-min-microvolt = <1375000>;
++				regulator-max-microvolt = <1375000>;				
++				regulator-boot-on;
++				regulator-always-on;
++				regulator-ramp-delay = <6250>;
++			};
++			
++			/* VDD_HIN, 3.3 */
++			sw2_reg: sw2 {
++				regulator-min-microvolt = <3300000>;
++				regulator-max-microvolt = <3300000>;
++				regulator-boot-on;
++				regulator-always-on;
++			};
++			
++			/* VDD_DDR, 1.5 */
++			sw3a_reg: sw3 {
++				regulator-min-microvolt = <1500000>;
++				regulator-max-microvolt = <1500000>;
++				regulator-boot-on;
++				regulator-always-on;
++			};
++
++			/* sw3b not used */
++
++			/* AUX_3V15, 3.15 */
++			sw4_reg: sw4 {
++				regulator-min-microvolt = <3150000>;
++				regulator-max-microvolt = <3150000>;
++				regulator-always-on;
++			};			
++
++			/* PMIC_5V, 5.0 */ 
++			swbst_reg: swbst {
++				regulator-min-microvolt = <5000000>;
++				regulator-max-microvolt = <5000000>;
++				regulator-always-on;
++			};
++
++			/* PMIC_VSNVS */
++			snvs_reg: vsnvs {
++				regulator-min-microvolt = <1000000>;
++				regulator-max-microvolt = <3000000>;
++				regulator-boot-on;
++				regulator-always-on;
++			};
++
++			/* DDR_VREF, 0.75 */
++			vref_reg: vrefddr {
++				regulator-boot-on;
++				regulator-always-on;
++			};
++
++			/* VGEN1 1.5 @ 100mA */
++			vgen1_reg: vgen1 {
++				regulator-min-microvolt = <1500000>;
++				regulator-max-microvolt = <1500000>;
++				regulator-always-on;
++			};
++			
++			/* VGEN2 1.5 @ 250mA */
++			vgen2_reg: vgen2 {
++				regulator-min-microvolt = <1500000>;
++				regulator-max-microvolt = <1500000>;
++				regulator-always-on;				
++			};
++
++			/* VGEN3 2.5 @ 100mA */
++			vgen3_reg: vgen3 {
++				regulator-min-microvolt = <2500000>;
++				regulator-max-microvolt = <2500000>;
++				regulator-always-on;
++			};
++
++			/* VGEN4 1.8 @ 350mA */
++			vgen4_reg: vgen4 {
++				regulator-min-microvolt = <1800000>;
++				regulator-max-microvolt = <1800000>;
++				regulator-always-on;
++			};
++			
++			/* VGEN5 2.8 @ 100mA */
++			vgen5_reg: vgen5 {
++				regulator-min-microvolt = <2800000>;
++				regulator-max-microvolt = <2800000>;
++				regulator-always-on;
++			};
++			
++			/* VGEN6 3.3 @ 200mA */
++			vgen6_reg: vgen6 {
++				regulator-min-microvolt = <3300000>;
++				regulator-max-microvolt = <3300000>;
++				regulator-always-on;
++			};
++		};
++	};
++
++	touch_i2c: atmel_mxt_ts@4a {
++		compatible = "atmel,atmel_mxt_ts";
++		reg = <0x4a>;
++		interrupt-parent = <&gpio2>;
++		interrupts = <0 IRQ_TYPE_EDGE_FALLING>;
++   	};
++
++	ds1340: rtc@68 {
++                compatible = "dallas,ds1340";
++                reg = <0x68>;
++                trickle-resistor-ohms = <250>;
++                trickle-diode-disable;
++  	};
++};
++
++&i2c2 {
++	clock-frequency = <100000>;
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_i2c2>;
++	status = "okay";
++
++#if 0
++	hdmi_edid: edid@50 {
++		compatible = "fsl,imx6-hdmi-i2c";
++		reg = <0x50>;
++	};
++#endif
++};
++
++&i2c3 {
++	clock-frequency = <400000>;
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_i2c3>;
++	status = "okay";
++
++	// 400KHz
++	codec: sgtl5000@a {
++		compatible = "fsl,sgtl5000";
++		reg = <0x0a>;
++		clocks = <&audioclk>;
++		clock-names = "sgtl_clk";
++        // for 24MHz clock, the one going to mipi camera (not used)
++        //clocks = <&clks IMX6QDL_CLK_CKO>;
++		VDDA-supply = <&vgen4_reg>;			// 1v8
++		VDDIO-supply = <&sw2_reg>;			// 3v3
++		VDDD-supply = <&vgen1_reg>;			// 1v5
++	};
++
++	// no driver, needs app, should have an i2c in /dev/i2c3
++	// eeram 1MHz, 0xa0 - 0xaC, A1, A2 = 1, 0x56 (left shift 1)
++
++	/* eeprom, 47L16 */
++	eeram: 47L16@56 {
++                compatible = "24c16";
++                reg = <0x56>;
++
++                // ERAM_HS, gpio2-6
++                // hardware stroe
++        };
++	
++};
++
++&i2c4 {
++	clock-frequency = <400000>;
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_i2c4>;
++	status = "okay";
++};
++
++&iomuxc {
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_hog>;
++
++	imx6q-nextgen {
++		pinctrl_hog: hoggrp {
++			fsl,pins = <
++				// AUX Connector, supply enable for regulator
++				MX6QDL_PAD_GPIO_2__GPIO1_IO02			0x80000000
++				// AUX Connector
++				MX6QDL_PAD_GPIO_4__GPIO1_IO04			0x80000000
++				// aux con
++				MX6QDL_PAD_GPIO_19__GPIO4_IO05			0x80000000
++				// GPS_PWREN
++				MX6QDL_PAD_ENET_RXD0__GPIO1_IO27		0x80000000
++				// fingerprint reset
++				MX6QDL_PAD_SD4_DAT7__GPIO2_IO15			0x80000000
++				// bar irq
++				MX6QDL_PAD_NANDF_D1__GPIO2_IO01			0x80000000
++				// acc irq
++				MX6QDL_PAD_NANDF_D2__GPIO2_IO02			0x80000000
++				// als irq, light sensor
++				MX6QDL_PAD_NANDF_D3__GPIO2_IO03			0x80000000
++				// eeprom wp
++				MX6QDL_PAD_NANDF_D5__GPIO2_IO05			0x80000000
++				// eram hs, force hw stgore event
++				MX6QDL_PAD_NANDF_D6__GPIO2_IO06			0x80000000
++				//  ac presence
++				MX6QDL_PAD_SD4_DAT4__GPIO2_IO12			0x80000000
++				// ac wave
++				MX6QDL_PAD_SD4_DAT5__GPIO2_IO13			0x80000000
++				// sata sleep (configured for lvds vs lcd24 display select)
++				MX6QDL_PAD_NANDF_CLE__GPIO6_IO07		0x80000000
++				// pmic int, driver does not use an interrupt
++				MX6QDL_PAD_GPIO_18__GPIO7_IO13			0x80000000
++				// TP8
++				MX6QDL_PAD_CSI0_MCLK__GPIO5_IO19		0x80000000
++			>;
++		};
++		
++		pinctrl_audmux: audmuxgrp {
++			fsl,pins = <
++				MX6QDL_PAD_KEY_ROW1__AUD5_RXD		0x130b0
++				MX6QDL_PAD_KEY_COL0__AUD5_TXC		0x130b0
++				MX6QDL_PAD_KEY_ROW0__AUD5_TXD		0x110b0
++				MX6QDL_PAD_KEY_COL1__AUD5_TXFS		0x130b0
++			>;
++		};
++
++		pinctrl_ecspi1: ecspi1grp {
++			fsl,pins = <
++				MX6QDL_PAD_CSI0_DAT6__ECSPI1_MISO		0x100b0
++				MX6QDL_PAD_CSI0_DAT5__ECSPI1_MOSI		0x100b0
++				MX6QDL_PAD_CSI0_DAT4__ECSPI1_SCLK		0x100b0
++			>;
++		};
++
++		pinctrl_ecspi1_cs: ecspi1csgrp {
++			fsl,pins = <
++				MX6QDL_PAD_CSI0_DAT7__GPIO5_IO25  		0x000b0		/* CS0 */
++				MX6QDL_PAD_KEY_ROW2__GPIO4_IO11			0x000b0 	/* CS2 */
++			>;
++		};
++
++		pinctrl_norhold: norholdgrp {
++			fsl,pins = <
++				MX6QDL_PAD_CSI0_PIXCLK__GPIO5_IO18		0x17059 	/* NOR_HOLD */
++			>;
++		};
++
++		pinctrl_ecspi4: ecspi4grp {
++			fsl,pins = <
++				MX6QDL_PAD_EIM_D22__ECSPI4_MISO		0x100b1
++				MX6QDL_PAD_EIM_D28__ECSPI4_MOSI		0x100b1
++				MX6QDL_PAD_EIM_D21__ECSPI4_SCLK		0x100b1
++			>;
++		};
++		
++		pinctrl_ecspi4_cs: ecspi4csgrp {
++			fsl,pins = <
++				MX6QDL_PAD_EIM_D20__GPIO3_IO20  	0x000b1	/* CS0 */
++			>;
++		};
++
++		pinctrl_enet: enetgrp {
++			fsl,pins = <
++                		// mdio pins
++				MX6QDL_PAD_ENET_MDIO__ENET_MDIO			0x1b0b0
++				MX6QDL_PAD_ENET_MDC__ENET_MDC			0x1b0b0
++
++				MX6QDL_PAD_RGMII_TXC__RGMII_TXC			0x1b030
++				MX6QDL_PAD_RGMII_TD0__RGMII_TD0			0x1b030
++				MX6QDL_PAD_RGMII_TD1__RGMII_TD1			0x1b030
++				MX6QDL_PAD_RGMII_TD2__RGMII_TD2			0x1b030
++				MX6QDL_PAD_RGMII_TD3__RGMII_TD3			0x1b030
++				MX6QDL_PAD_RGMII_TX_CTL__RGMII_TX_CTL	0x1b030
++
++               			MX6QDL_PAD_ENET_REF_CLK__ENET_TX_CLK	0x1b0b0
++
++				MX6QDL_PAD_RGMII_RXC__RGMII_RXC			0x1b030
++				MX6QDL_PAD_RGMII_RD0__RGMII_RD0			0x1b030
++				MX6QDL_PAD_RGMII_RD1__RGMII_RD1			0x1b030
++				MX6QDL_PAD_RGMII_RD2__RGMII_RD2			0x1b030
++				MX6QDL_PAD_RGMII_RD3__RGMII_RD3			0x1b030
++				MX6QDL_PAD_RGMII_RX_CTL__RGMII_RX_CTL	0x13030
++
++				MX6QDL_PAD_ENET_CRS_DV__GPIO1_IO25		0x130b0		/* phy reset */
++ 				MX6QDL_PAD_ENET_TX_EN__GPIO1_IO28		0x000b0		/* wol */
++                		/* not used */
++				MX6QDL_PAD_GPIO_16__ENET_REF_CLK		0xC0000000 	/* ref clock 50M */
++				MX6QDL_PAD_GPIO_17__GPIO7_IO12			0x80000000	/* pwr en */
++			>;
++		};
++
++		pinctrl_enet_irq: enetirqgrp {
++			fsl,pins = <
++				MX6QDL_PAD_ENET_RXD1__GPIO1_IO26		0x000b1	/* irq */
++			>;
++		};
++
++		debug_leds: gpio_leddebug {
++			fsl,pins = <
++				MX6QDL_PAD_NANDF_CS2__GPIO6_IO15	0x000b0	/* led dbg1 */
++				MX6QDL_PAD_NANDF_CS3__GPIO6_IO16	0x000b0	/* led dbg2 */
++			>;
++		};
++
++		pinctrl_hdmi_cec: hdmicecgrp {
++			fsl,pins = <
++				MX6QDL_PAD_EIM_A25__HDMI_TX_CEC_LINE 	0x1f8b0
++			>;
++		};
++
++		pinctrl_i2c1: i2c1grp {
++			fsl,pins = <
++				MX6QDL_PAD_CSI0_DAT9__I2C1_SCL		0x4001b8b1
++				MX6QDL_PAD_CSI0_DAT8__I2C1_SDA		0x4001b8b1
++				MX6QDL_PAD_NANDF_RB0__GPIO6_IO10	0x000b0	/* lcd ts reset */
++			>;
++		};
++
++		pinctrl_i2c2: i2c2grp {
++			fsl,pins = <
++				MX6QDL_PAD_KEY_COL3__I2C2_SCL		0x4001b8b1
++				MX6QDL_PAD_KEY_ROW3__I2C2_SDA		0x4001b8b1
++			>;
++		};
++
++		pinctrl_i2c3: i2c3grp {
++			fsl,pins = <
++				MX6QDL_PAD_EIM_D17__I2C3_SCL		0x4001b8b1
++				MX6QDL_PAD_EIM_D18__I2C3_SDA		0x4001b8b1
++			>;
++		};
++
++		pinctrl_i2c4: i2c4grp {
++			fsl,pins = <
++				MX6QDL_PAD_NANDF_WP_B__I2C4_SCL		0x4001b8b1
++				MX6QDL_PAD_ENET_TXD1__I2C4_SDA		0x4001b8b1
++			>;
++		};
++
++		pinctrl_hdmi_hdcp: hdmi_hdcpgrp {
++			fsl,pins = <
++				MX6QDL_PAD_KEY_COL3__HDMI_TX_DDC_SCL	0x4001b8b1
++				MX6QDL_PAD_KEY_ROW3__HDMI_TX_DDC_SDA	0x4001b8b1
++			>;
++		};
++
++		pinctrl_pwm1: pwm1grp {
++			fsl,pins = <
++				MX6QDL_PAD_GPIO_9__PWM1_OUT 		0x000b0	//0x1b0b1
++			>;
++		};
++
++		pinctrl_pwm2: pwm2grp {
++			fsl,pins = <
++				MX6QDL_PAD_GPIO_1__PWM2_OUT 		0x000b0	//0x1b0b1
++				MX6QDL_PAD_EIM_CS0__GPIO2_IO23		0x000b0	/* fan rpm */
++			>;
++		};
++		
++		/* lcd backlite */
++		pinctrl_pwm3: pwm3grp {
++			fsl,pins = <
++				MX6QDL_PAD_SD1_DAT1__PWM3_OUT 		0x000b0	//0x1b0b1
++			>;
++		};
++		
++		/* backlight lvds */
++		pinctrl_pwm4: pwm4grp {
++			fsl,pins = <
++				MX6QDL_PAD_SD1_CMD__PWM4_OUT 		0x000b0	//0x1b0b1
++			>;
++		};
++
++		pinctrl_lvds: lvdsgrp {
++			fsl,pins = <
++				MX6QDL_PAD_NANDF_CS0__GPIO6_IO11	0x000b0	/* lvds pwr en */
++			>;
++		};
++
++		/* J22, rs485 */
++		pinctrl_uart1: uart1grp {
++			fsl,pins = <
++				MX6QDL_PAD_CSI0_DAT10__UART1_TX_DATA	0x1b0b1
++				MX6QDL_PAD_CSI0_DAT11__UART1_RX_DATA	0x1b0b1
++				MX6QDL_PAD_EIM_D19__GPIO3_IO19			0x000b0
++			>;
++		};
++		
++		// does this need fast slew rate? think so
++		/* J12/13, CAN */
++		pinctrl_uart2: uart2grp {
++			fsl,pins = <
++				MX6QDL_PAD_EIM_D27__UART2_RX_DATA		0x1b0b1
++				MX6QDL_PAD_EIM_D26__UART2_TX_DATA		0x1b0b1
++				MX6QDL_PAD_EIM_D29__UART2_RTS_B			0x1b0b1
++				MX6QDL_PAD_SD4_DAT6__UART2_CTS_B		0x1b0b1
++			>;
++		};
++		
++		/* Console I/O */
++		pinctrl_uart3: uart3grp {
++			fsl,pins = <
++				MX6QDL_PAD_EIM_D24__UART3_TX_DATA		0x1b0b0
++				MX6QDL_PAD_EIM_D25__UART3_RX_DATA		0x1b0b0
++			>;
++		};
++
++		/* wl1837 */
++		pinctrl_uart4: uart4grp {
++			fsl,pins = <
++				MX6QDL_PAD_CSI0_DAT12__UART4_TX_DATA	0x1b0b1
++				MX6QDL_PAD_CSI0_DAT13__UART4_RX_DATA	0x1b0b1
++				MX6QDL_PAD_CSI0_DAT16__UART4_RTS_B		0x1b0b1
++				MX6QDL_PAD_CSI0_DAT17__UART4_CTS_B		0x1b0b1
++			>;
++		};
++
++		/**/
++		pinctrl_uart5: uart5grp {
++			fsl,pins = <
++				MX6QDL_PAD_CSI0_DAT14__UART5_TX_DATA	0x1b0b1
++				MX6QDL_PAD_CSI0_DAT15__UART5_RX_DATA	0x1b0b1
++			>;
++		};
++
++		pinctrl_usbotg: usbotggrp {
++			fsl,pins = <
++				MX6QDL_PAD_ENET_RX_ER__USB_OTG_ID	0x17059
++			>;
++		};
++
++		pinctrl_usbh1: usbh1grp {
++			fsl,pins = <
++				MX6QDL_PAD_EIM_D30__USB_H1_OC				0x1b0b0
++				MX6QDL_PAD_KEY_COL2__USB_H1_PWR_CTL_WAKE	0x000b0
++			>;
++		};
++
++		pinctrl_usbh1_vbus: usbh1_vbusgrp {
++			fsl,pins = <
++				MX6QDL_PAD_EIM_D31__GPIO3_IO31		0x000b0
++			>;
++		};
++
++		/* wl1837 */
++		pinctrl_usdhc2: usdhc2grp {
++			fsl,pins = <
++				MX6QDL_PAD_SD2_CMD__SD2_CMD			0x17059
++				MX6QDL_PAD_SD2_CLK__SD2_CLK			0x10059
++				MX6QDL_PAD_SD2_DAT0__SD2_DATA0		0x17059
++				MX6QDL_PAD_SD2_DAT1__SD2_DATA1		0x17059
++				MX6QDL_PAD_SD2_DAT2__SD2_DATA2		0x17059
++				MX6QDL_PAD_SD2_DAT3__SD2_DATA3		0x17059
++				
++            			MX6QDL_PAD_EIM_CS1__GPIO2_IO24		0x000b1	/* irq */
++				MX6QDL_PAD_SD1_CLK__GPIO1_IO20		0x000b0	/* bt en */
++				MX6QDL_PAD_NANDF_D7__GPIO2_IO07		0x000b0	/* wlan en */
++				MX6QDL_PAD_NANDF_D4__GPIO2_IO04		0x000b0	/* wlbt en, uart enable */
++			>;
++		};
++
++		/* emmc */
++		pinctrl_usdhc3: usdhc3grp {
++			fsl,pins = <
++				MX6QDL_PAD_SD3_CMD__SD3_CMD			0x17059
++				MX6QDL_PAD_SD3_CLK__SD3_CLK			0x10059
++				MX6QDL_PAD_SD3_DAT0__SD3_DATA0		0x17059
++				MX6QDL_PAD_SD3_DAT1__SD3_DATA1		0x17059
++				MX6QDL_PAD_SD3_DAT2__SD3_DATA2		0x17059
++				MX6QDL_PAD_SD3_DAT3__SD3_DATA3		0x17059
++				MX6QDL_PAD_SD3_DAT4__SD3_DATA4		0x17059
++				MX6QDL_PAD_SD3_DAT5__SD3_DATA5		0x17059
++				MX6QDL_PAD_SD3_DAT6__SD3_DATA6		0x17059
++				MX6QDL_PAD_SD3_DAT7__SD3_DATA7		0x17059
++
++				MX6QDL_PAD_SD3_RST__SD3_RESET		0x17059
++				MX6QDL_PAD_NANDF_CS1__SD3_VSELECT	0x17059
++			>;
++		};		
++
++		/* uSdcard */
++		pinctrl_usdhc4: usdhc4grp {
++			fsl,pins = <
++				MX6QDL_PAD_SD4_CMD__SD4_CMD			0x17059
++				MX6QDL_PAD_SD4_CLK__SD4_CLK			0x10059
++				MX6QDL_PAD_SD4_DAT0__SD4_DATA0		0x17059
++				MX6QDL_PAD_SD4_DAT1__SD4_DATA1		0x17059
++				MX6QDL_PAD_SD4_DAT2__SD4_DATA2		0x17059
++				MX6QDL_PAD_SD4_DAT3__SD4_DATA3		0x17059
++				
++				MX6QDL_PAD_NANDF_ALE__SD4_RESET 	0x000b1		/* reset */ 
++				MX6QDL_PAD_EIM_BCLK__GPIO6_IO31		0x000b1		/* pwr off */
++				MX6QDL_PAD_GPIO_6__GPIO1_IO06		0x000b1		/* card detect */
++			>;
++		};
++
++		pinctrl_watchdog: watchdoggrp {
++			fsl,pins = <
++				MX6QDL_PAD_SD1_DAT2__WDOG1_RESET_B_DEB	0x80000000
++				MX6QDL_PAD_SD1_DAT3__WDOG2_RESET_B_DEB	0x80000000
++			>;
++		};
++	};
++};
++
++&ldb {
++	status = "okay";
++
++	lvds-channel@0 {
++		fsl,data-mapping = "spwg";
++		fsl,data-width = <18>;
++		crtc = "ipu1-di0";
++		status = "disabled";
++
++		display-timings {
++			native-mode = <&timing0>;
++			timing0: hsd100pxn1 {
++				clock-frequency = <65000000>;
++				hactive = <1024>;
++				vactive = <768>;
++				hback-porch = <220>;
++				hfront-porch = <40>;
++				vback-porch = <21>;
++				vfront-porch = <7>;
++				hsync-len = <60>;
++				vsync-len = <10>;
++			};
++		};
++	};
++
++	lvds-channel@1 {
++		fsl,data-mapping = "spwg";
++		fsl,data-width = <24>;
++		crtc = "ipu1-di1";
++		primary;
++		status = "disabled";
++
++		display-timings {
++			native-mode = <&timing1>;
++			timing1: hsd100pxn1 {
++				clock-frequency = <71900000>;
++				hactive = <1024>;
++				vactive = <600>;
++				hback-porch = <24>;
++				hfront-porch = <72>;
++				vback-porch = <10>;
++				vfront-porch = <12>;
++				hsync-len = <24>;
++				vsync-len = <2>;
++				pixelclk-active = <0>;
++			};
++		};
++	};
++};
++
++&pcie {
++	status = "disabled";
++};
++
++&pwm1 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_pwm1>;
++	status = "okay";
++};
++
++&reg_arm {
++       vin-supply = <&sw1a_reg>;
++};
++
++&reg_pu {
++       vin-supply = <&sw1c_reg>;
++};
++
++&reg_soc {
++       vin-supply = <&sw1c_reg>;
++};
++
++&reg_vdd1p1 {
++	vin-supply = <&vgen5_reg>;
++};
++
++&reg_vdd2p5 {
++	vin-supply = <&vgen5_reg>;
++};
++
++&pwm3 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_pwm3>;
++	status = "okay";
++};
++
++&pwm4 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_pwm4>;
++	status = "okay";
++};
++
++&snvs_poweroff {
++	status = "okay";
++};
++
++&ssi1 {
++	status = "okay";
++};
++
++&ssi2 {
++	assigned-clocks = <&clks IMX6QDL_CLK_PLL4>,
++			  <&clks IMX6QDL_PLL4_BYPASS>,
++			  <&clks IMX6QDL_CLK_SSI2_SEL>;
++	assigned-clock-parents = <&clks IMX6QDL_CLK_OSC>,
++				 <&clks IMX6QDL_CLK_PLL4>,
++				 <&clks IMX6QDL_CLK_PLL4_AUDIO_DIV>;
++	assigned-clock-rates = <737280000>, <0>, <0>;
++	status = "okay";
++};
++
++/* Console, J22, rs485 */
++&uart1 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_uart1>;
++	status = "okay";
++	dmas = <>;
++	dma-names = "";
++	//fsl,uart-has-rtscts;
++};
++
++/* J12/13 */
++&uart2 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_uart2>;
++	status = "okay";
++};
++
++/* Console i/o J5 */
++&uart3 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_uart3>;
++	status = "okay";
++};
++
++/* WIFI/BLE, WL1837 */
++&uart4 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_uart4>;
++	fsl,uart-has-rtscts;
++	//fsl,dte-mode;
++	status = "okay";
++};
++
++/* J8, RS232 for Reneses Communication */
++&uart5 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_uart5>;
++	status = "okay";
++};
++
++&usbh1 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_usbh1>;
++	vbus-supply = <&reg_usbh1_vbus>;
++	status = "okay";
++};
++
++&usbotg {
++	vbus-supply = <&reg_usb_otg_vbus>;
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_usbotg>;
++	disable-over-current;
++	status = "okay";
++};
++
++/* WIFI/BLE, wl1837 */
++&usdhc2 {
++	pinctrl-names = "default"; //, "sleep";
++	pinctrl-0 = <&pinctrl_usdhc2>;
++	vmmc-supply = <&wlan_en_reg>; 
++	status = "okay";
++
++	ti,non-removable;
++	cap-power-off-card;
++	keep-power-in-suspend;
++	enable-sdio-wakeup;
++	non-removable;
++	bus-width = <4>;
++
++	#address-cells = <1>;
++	#size-cells = <0>;
++	wlcore: wlcore@0 {
++		compatible = "ti,wl1837";
++		reg = <0x2>;
++		interrupt-parent = <&gpio2>;
++		interrupts = <24 IRQ_TYPE_LEVEL_HIGH>;
++		platform-quirks = <1>;
++	};
++};
++
++/* emmc */
++&usdhc3 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_usdhc3>;
++	status = "okay";
++	vmmc-supply = <&wlbt_en_reg>; //MX6QDL_PAD_NANDF_D4__GPIO2_IO04 uart buffer enable
++
++};
++
++/* uSdcard */
++&usdhc4 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_usdhc4>;
++	cd-gpios = <&gpio1 6 GPIO_ACTIVE_LOW>;	// MX6QDL_PAD_GPIO_6__GPIO1_IO06
++	vmmc-supply = <&mmc_reg>;
++	status = "okay";
++};
++
++&wdog1 {
++	status = "disabled";
++};
++
++&wdog2 {
++	status = "disabled";
++};

@@ -1,0 +1,23 @@
+diff --git a/drivers/input/touchscreen/atmel_mxt_ts.c b/drivers/input/touchscreen/atmel_mxt_ts.c
+index 20094b9899f0..d6324f59c0ae 100644
+--- a/drivers/input/touchscreen/atmel_mxt_ts.c
++++ b/drivers/input/touchscreen/atmel_mxt_ts.c
+@@ -2796,7 +2796,18 @@ static int mxt_configure_objects(struct mxt_data *data,
+ 	if (cfg) {
+ 		error = mxt_update_cfg(data, cfg);
+ 		if (error)
++		{
+ 			dev_warn(dev, "Error %d updating config\n", error);
++			dev_warn(dev, "We want to retry using reseting the chip\n");
++			while(error < 0)
++			{
++				gpiod_set_value(data->reset_gpio, 1);
++				msleep(MXT_RESET_GPIO_TIME);
++				gpiod_set_value(data->reset_gpio, 0);
++				msleep(MXT_RESET_GPIO_TIME);
++				error = mxt_update_cfg(data, cfg);
++			}
++		}
+ 	}
+ 
+ 	if (data->multitouch) {

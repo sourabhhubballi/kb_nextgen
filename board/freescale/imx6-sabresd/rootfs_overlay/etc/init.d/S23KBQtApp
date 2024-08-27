@@ -1,0 +1,33 @@
+#!/bin/sh
+
+export QT_QPA_PLATFORM=linuxfb:fb=/dev/fb0:size=1024x600:mmSize=1024x600
+
+secs=$((10))
+count=$((0))
+
+case "$1" in
+  start)
+	amixer -c sgtl5000fslaudi sset 'Headphone' on  
+        echo KitchenBrian Qt App start : OK
+        while [ $secs -gt 0 ]; do
+                echo Waiting for Bootloader to respond "$secs" ....
+                sleep 1
+                secs=$((secs-1))
+                count=$((count+1))
+                psplash-write "PROGRESS $((90+count))"
+        done	  
+        cd /root/VTC3000QT/VTC3000QT/
+        ./VTC3000QT &
+        cd ~
+        ;;
+  stop)
+        echo KitchenBrian Qt App stop : OK
+        kill -9 $(pidof VTC3000QT)
+        ;;
+  *)
+  echo "Usage: $0 {start|stop}"
+  exit 1
+
+esac
+
+exit $?

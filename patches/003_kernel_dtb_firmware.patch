@@ -1,0 +1,45 @@
+diff --git a/arch/arm/boot/dts/nxp/imx/imx6qdl-nextgen.dtsi b/arch/arm/boot/dts/nxp/imx/imx6qdl-nextgen.dtsi
+index 487a5f4d0e7e..c606d272797e 100644
+--- a/arch/arm/boot/dts/nxp/imx/imx6qdl-nextgen.dtsi
++++ b/arch/arm/boot/dts/nxp/imx/imx6qdl-nextgen.dtsi
+@@ -472,6 +472,7 @@ vgen6_reg: vgen6 {
+ 	touch_i2c: atmel_mxt_ts@4a {
+ 		compatible = "atmel,atmel_mxt_ts";
+ 		reg = <0x4a>;
++		reset = <&gpio6 10 GPIO_ACTIVE_LOW>;
+ 		interrupt-parent = <&gpio2>;
+ 		interrupts = <0 IRQ_TYPE_EDGE_FALLING>;
+    	};
+@@ -901,7 +902,7 @@ lvds-channel@1 {
+ 		display-timings {
+ 			native-mode = <&timing1>;
+ 			timing1: hsd100pxn1 {
+-				clock-frequency = <71900000>;
++				clock-frequency = <63000000>;
+ 				hactive = <1024>;
+ 				vactive = <600>;
+ 				hback-porch = <24>;
+diff --git a/arch/arm/configs/imx_v7_defconfig b/arch/arm/configs/imx_v7_defconfig
+index 472dff26b4b3..035d906858c4 100644
+--- a/arch/arm/configs/imx_v7_defconfig
++++ b/arch/arm/configs/imx_v7_defconfig
+@@ -101,6 +101,11 @@ CONFIG_PCI_EPF_TEST=y
+ CONFIG_DEVTMPFS=y
+ CONFIG_DEVTMPFS_MOUNT=y
+ # CONFIG_STANDALONE is not set
++CONFIG_FW_LOADER=y
++CONFIG_FW_LOADER_PAGED_BUF=y
++CONFIG_FW_LOADER_SYSFS=y
++CONFIG_EXTRA_FIRMWARE="imx/sdma/sdma-imx6q.bin maxtouch.cfg"
++CONFIG_EXTRA_FIRMWARE_DIR="../../../firmwares/"
+ CONFIG_FW_LOADER_USER_HELPER=y
+ CONFIG_FW_LOADER_USER_HELPER_FALLBACK=y
+ CONFIG_IMX_WEIM=y
+@@ -181,7 +186,6 @@ CONFIG_WL18XX=m
+ CONFIG_WLCORE_SDIO=m
+ # CONFIG_WILINK_PLATFORM_DATA is not set
+ CONFIG_INPUT_EVDEV=y
+-CONFIG_INPUT_EVBUG=m
+ CONFIG_KEYBOARD_GPIO=y
+ CONFIG_KEYBOARD_RPMSG=y
+ CONFIG_KEYBOARD_IMX=y
